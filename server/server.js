@@ -4,9 +4,10 @@ const { Server } = require("socket.io");
 const cors = require("cors");
 
 const app = express();
+require("dotenv").config();
 // ✅ CORS (no trailing slash)
 app.use(cors({
-  origin: "https://collab-code-self.vercel.app",
+  origin: process.env.CLIENT_URL,
   methods: ["GET", "POST"],
   credentials: true
 }));
@@ -16,7 +17,7 @@ const server = http.createServer(app);
 // ✅ Socket CORS
 const io = new Server(server, {
   cors: {
-    origin: "https://collab-code-self.vercel.app",
+    origin: process.env.CLIENT_URL,
     methods: ["GET", "POST"]
   },
 });
