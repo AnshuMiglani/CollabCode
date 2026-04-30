@@ -5,7 +5,7 @@ const cors = require("cors");
 
 const app = express();
 require("dotenv").config();
-// ✅ CORS (no trailing slash)
+
 app.use(cors({
   origin: process.env.CLIENT_URL,
   methods: ["GET", "POST"],
@@ -14,7 +14,6 @@ app.use(cors({
 
 const server = http.createServer(app);
 
-// ✅ Socket CORS
 const io = new Server(server, {
   cors: {
     origin: process.env.CLIENT_URL,
