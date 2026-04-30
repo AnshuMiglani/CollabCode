@@ -1,7 +1,9 @@
 import { useEffect, useRef } from "react";
 import { io } from "socket.io-client";
 
-const socket = io("http://localhost:3000");
+const socket = io("https://collabcode-mm6u.onrender.com", {
+  transports: ["websocket"],
+});
 
 export default function useSocket({
   roomId, username, activeFile,
