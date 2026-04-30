@@ -4,11 +4,26 @@ const { Server } = require("socket.io");
 const cors = require("cors");
 
 const app = express();
-app.use(cors());
+// ✅ CORS (no trailing slash)
+app.use(cors({
+  origin: "https://collab-code-self.vercel.app",
+  methods: ["GET", "POST"],
+  credentials: true
+}));
+
 const server = http.createServer(app);
 
+// ✅ Socket CORS
 const io = new Server(server, {
-  cors: { origin: "http://localhost:5173", methods: ["GET", "POST"] },
+  cors: {
+    origin: "https://collab-code-self.vercel.app",
+    methods: ["GET", "POST"]
+  },
+});
+
+// ✅ Health check route (important)
+app.get("/", (req, res) => {
+  res.send("Server is running 🚀");
 });
 
 const roomCode = {};
@@ -58,4 +73,8 @@ io.on("connection", (socket) => {
   });
 });
 
-server.listen(3000, () => console.log("Server running on http://localhost:3000"));
+const PORT = process.env.PORT || 3000;
+
+server.listen(PORT, () => {
+  console.log("Server running on port " + PORT);
+});

@@ -122,7 +122,7 @@ export default function Editor({ roomId, username }) {
   // ── Run code ──
   const runCode = async () => {
     setIsRunning(true);
-    setOutput("⏳ Running...");
+    setOutput(" Running...");
     const lang = getLangByValue(language);
     setTerminalHistory((prev) => [...prev, `$ Running ${lang.label}...`]);
 
