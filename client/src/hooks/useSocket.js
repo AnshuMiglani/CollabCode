@@ -1,10 +1,9 @@
 import { useEffect, useRef } from "react";
 import { io } from "socket.io-client";
 
-const socket = io("https://collabcode-mm6u.onrender.com", {
+const socket = io(import.meta.env.VITE_BACKEND_URL, {
   transports: ["websocket"],
 });
-
 export default function useSocket({
   roomId, username, activeFile,
   onLoadCode, onCodeUpdate, onParticipantsUpdate,
