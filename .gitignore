@@ -1,4 +1,4 @@
-# Node
+ # Node
 node_modules/
 npm-debug.log*
 yarn-debug.log*
@@ -18,6 +18,7 @@ logs
 # OS / Editor
 .DS_Store
 .vscode/
+powershell.bat
 
 # Client specific
 client/node_modules/

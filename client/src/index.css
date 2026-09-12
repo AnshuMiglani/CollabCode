@@ -1,3 +1,87 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  * {
+    border-color: rgba(255, 255, 255, 0.08);
+  }
+
+  body {
+    background-color: #090a0f;
+    color: #f1f5f9;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+}
+
+/* Custom Sleek Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+/* Glassmorphism helpers */
+.glass-panel {
+  background: rgba(16, 18, 29, 0.75);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.glass-dropdown {
+  background: rgba(19, 22, 36, 0.95);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.6);
+}
+
+/* Monaco Remote Cursor Caret Styles */
+.remote-caret-base {
+  border-left-width: 2px !important;
+  border-left-style: solid !important;
+  margin-left: -1px;
+}
+
+.remote-caret-label-base {
+  position: absolute;
+  top: -18px;
+  left: 0;
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 14px;
+  padding: 0 4px;
+  border-radius: 2px 2px 2px 0;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 50;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.4);
+}
+
+/* Animations */
+@keyframes pulseLive {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.4);
+    opacity: 0.5;
+  }
+}
+
+.live-pulse {
+  animation: pulseLive 2s infinite ease-in-out;
+}

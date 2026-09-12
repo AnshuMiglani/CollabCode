@@ -1,59 +1,201 @@
+import { useState } from "react";
+import {
+  Play,
+  Share2,
+  Check,
+  PanelLeft,
+  ExternalLink,
+  Code2,
+  Crown,
+  ChevronDown,
+  Sparkles,
+  Wifi,
+  WifiOff
+} from "lucide-react";
 import { LANGUAGES } from "../utils/languageUtils";
 
 export default function Header({
-  language, onLanguageChange, onRun, isRunning,
-  roomId, username, onToggleSidebar, copied, onCopy,
+  language,
+  onLanguageChange,
+  onRun,
+  isRunning,
+  onFormat,
+  onToggleWebPreview,
+  roomId,
+  username,
+  creatorName,
+  participants = [],
+  onToggleSidebar,
+  copied,
+  onCopy,
+  isConnected = true,
 }) {
+  const [showLangMenu, setShowLangMenu] = useState(false);
+  const currentLangObj = LANGUAGES.find((l) => l.value === language) || LANGUAGES[0];
+  const isHost = username === creatorName;
+
   return (
-    <div className="flex items-center gap-3 px-4 h-[48px] bg-[#323233] border-b border-[#111] shrink-0">
-      <button
-        onClick={onToggleSidebar}
-        className="text-gray-400 hover:text-white text-lg transition-colors"
-        title="Toggle Sidebar"
-      >☰</button>
-
-      <div className="flex items-center gap-2 text-[#61dafb] font-bold text-base">
-  <img src="/cc.png" alt="cc" className="w-6 h-6" />
-  <span>CollabCode</span>
-</div>
-
-      <select
-  className="ml-2 text-xs px-2 py-1 rounded bg-[#3a3a3a] text-white border border-[#555] outline-none cursor-pointer"
-  value={language}
-  onChange={(e) => onLanguageChange(e.target.value)}
->
-  {LANGUAGES.map((l) => (
-    <option key={l.value} value={l.value}>
-      {l.label}
-    </option>
-  ))}
-</select>
-
-      <button
-        onClick={onRun}
-        disabled={isRunning}
-        className="px-4 py-1 rounded bg-green-600 hover:bg-green-500 disabled:bg-green-900 text-white text-xs font-bold transition-colors"
-      >
-        {isRunning ? " Running..." : " Run"}
-      </button>
-
-      <div className="flex items-center gap-2 ml-auto">
-        <span className="text-gray-500 text-xs">Room:</span>
-        <code className="text-[#61dafb] text-xs bg-[#2a2a2a] px-2 py-0.5 rounded border border-[#444]">
-          {roomId.slice(0, 8)}...
-        </code>
+    <header className="flex items-center justify-between px-3 h-12 bg-[#0a0c14] border-b border-white/8 shrink-0 text-slate-200 select-none">
+      {/* Left: Brand + Sidebar Toggle + Breadcrumb */}
+      <div className="flex items-center gap-3">
         <button
-          onClick={onCopy}
-          className="text-xs px-2 py-1 rounded bg-[#61dafb] text-black font-bold hover:bg-[#4fc8e8] transition-colors"
+          onClick={onToggleSidebar}
+          className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors"
+          title="Toggle Explorer"
         >
-          {copied ? "✅" : " Copy"}
+          <PanelLeft className="w-4 h-4" />
+        </button>
+
+        {/* Brand */}
+        <div className="flex items-center gap-2">
+          <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-sky-400 to-indigo-600 flex items-center justify-center font-black text-xs text-slate-950 shadow-md shadow-sky-500/20">
+            CC
+          </div>
+          <span className="font-black text-sm tracking-tight bg-gradient-to-r from-sky-400 via-indigo-300 to-sky-300 bg-clip-text text-transparent hidden sm:inline">
+            CollabCode
+          </span>
+        </div>
+
+        {/* Live Pulse Indicator */}
+        <div
+          className={`flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-medium border ${
+            isConnected
+              ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
+              : "bg-rose-500/10 text-rose-400 border-rose-500/20"
+          }`}
+          title={isConnected ? "WebSocket Synchronized" : "Reconnecting to server..."}
+        >
+          <span
+            className={`w-1.5 h-1.5 rounded-full ${
+              isConnected ? "bg-emerald-400 live-pulse" : "bg-rose-400"
+            }`}
+          />
+          <span className="hidden md:inline">{isConnected ? "Live" : "Offline"}</span>
+        </div>
+
+        <div className="h-4 w-px bg-white/10 hidden sm:block" />
+
+        {/* Language Switcher Dropdown */}
+        <div className="relative">
+          <button
+            onClick={() => setShowLangMenu(!showLangMenu)}
+            className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 text-xs transition-colors"
+          >
+            <span
+              className="w-2 h-2 rounded-full"
+              style={{ backgroundColor: currentLangObj.color || "#38bdf8" }}
+            />
+            <span className="font-medium text-slate-200">{currentLangObj.label}</span>
+            <ChevronDown className="w-3 h-3 text-slate-400 ml-0.5" />
+          </button>
+
+          {showLangMenu && (
+            <div className="absolute left-0 top-full mt-1 w-44 glass-dropdown rounded-xl py-1.5 z-50 animate-in fade-in zoom-in-95 duration-100">
+              <div className="px-3 py-1 text-[10px] uppercase font-bold text-slate-500 tracking-wider">
+                Select Language
+              </div>
+              {LANGUAGES.map((lang) => (
+                <button
+                  key={lang.value}
+                  onClick={() => {
+                    onLanguageChange(lang.value);
+                    setShowLangMenu(false);
+                  }}
+                  className={`w-full flex items-center justify-between px-3 py-1.5 text-xs text-left transition-colors ${
+                    language === lang.value
+                      ? "bg-sky-500/20 text-sky-300 font-medium"
+                      : "text-slate-300 hover:bg-white/5 hover:text-white"
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <span
+                      className="w-2 h-2 rounded-full"
+                      style={{ backgroundColor: lang.color }}
+                    />
+                    <span>{lang.label}</span>
+                  </div>
+                  <span className="text-[10px] text-slate-500 font-mono">.{lang.ext}</span>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Center / Actions: Run, Format, Preview */}
+      <div className="flex items-center gap-2">
+        {/* Run Button */}
+        <button
+          onClick={onRun}
+          disabled={isRunning}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-slate-950 font-bold text-xs shadow-lg shadow-emerald-500/20 active:scale-95 disabled:opacity-50 transition-all cursor-pointer"
+          title="Run Code (Ctrl + Enter)"
+        >
+          <Play className="w-3.5 h-3.5 fill-current" />
+          <span>{isRunning ? "Running..." : "Run"}</span>
+          <kbd className="hidden lg:inline text-[9px] bg-black/20 px-1 rounded ml-1 font-mono">
+            ⌘↵
+          </kbd>
+        </button>
+
+        {/* Web Preview Button */}
+        <button
+          onClick={onToggleWebPreview}
+          className="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-xs text-slate-300 hover:text-white transition-colors"
+          title="Open Live Web Preview"
+        >
+          <ExternalLink className="w-3.5 h-3.5 text-sky-400" />
+          <span>Web Preview</span>
+        </button>
+
+        {/* Format Document Button */}
+        <button
+          onClick={onFormat}
+          className="hidden md:flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-xs text-slate-300 hover:text-white transition-colors"
+          title="Format Code (Ctrl + S)"
+        >
+          <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+          <span>Format</span>
         </button>
       </div>
 
-      <div className="flex items-center gap-1.5 text-xs text-gray-400 border border-[#444] px-2 py-1 rounded">
-        <span className="w-2 h-2 rounded-full bg-green-400 inline-block"></span>
-        {username}
+      {/* Right: Collaborators Avatar Stack + Share Room + Self Profile */}
+      <div className="flex items-center gap-2.5">
+        {/* Collaborators Avatar Stack */}
+        <div className="flex items-center -space-x-1.5 overflow-hidden">
+          {participants.slice(0, 4).map((u, i) => (
+            <div
+              key={u.id || i}
+              className="w-6 h-6 rounded-full border-2 border-[#0a0c14] flex items-center justify-center text-[10px] font-bold text-slate-950 uppercase shadow-sm cursor-pointer transition-transform hover:scale-110 hover:z-10"
+              style={{ backgroundColor: u.color || "#38bdf8" }}
+              title={`${u.username} ${u.username === creatorName ? "(Host)" : ""}`}
+            >
+              {u.username.slice(0, 1)}
+            </div>
+          ))}
+          {participants.length > 4 && (
+            <div className="w-6 h-6 rounded-full bg-slate-800 border-2 border-[#0a0c14] flex items-center justify-center text-[9px] text-slate-300 font-medium">
+              +{participants.length - 4}
+            </div>
+          )}
+        </div>
+
+        {/* Share Room Button */}
+        <button
+          onClick={onCopy}
+          className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-sky-500/10 hover:bg-sky-500/20 border border-sky-500/30 text-sky-300 text-xs font-semibold transition-all cursor-pointer"
+          title="Copy invite link"
+        >
+          {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Share2 className="w-3.5 h-3.5" />}
+          <span className="hidden sm:inline">{copied ? "Link Copied!" : "Share"}</span>
+        </button>
+
+        {/* User Badge */}
+        <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/5 border border-white/10 text-xs font-medium text-slate-300">
+          {isHost && <Crown className="w-3 h-3 text-amber-400 shrink-0" />}
+          <span className="truncate max-w-[90px]">{username}</span>
+        </div>
       </div>
-    </div>
+    </header>
   );
 }

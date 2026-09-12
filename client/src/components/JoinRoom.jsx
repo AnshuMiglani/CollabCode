@@ -1,363 +1,451 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { v4 as uuidv4 } from "uuid";
+import {
+  Code2,
+  Terminal,
+  Zap,
+  Sparkles,
+  ArrowRight,
+  Dice5,
+  Users,
+  Cpu,
+  Layers,
+  CheckCircle2,
+  Globe,
+  Radio,
+  Flame
+} from "lucide-react";
 
-const CODE_SNIPPETS = [
-  // JavaScript
-  { code: "const sum = (a, b) => a + b;", lang: "JS", color: "#f7df1e", tip: "Arrow function — defines a reusable sum function" },
-  { code: "fetch('/api').then(r => r.json())", lang: "JS", color: "#f7df1e", tip: "Fetch API — makes an HTTP request and parses JSON response" },
-  { code: "arr.filter(x => x % 2 === 0)", lang: "JS", color: "#f7df1e", tip: "Array filter — returns only even numbers from an array" },
-  { code: "const [state, setState] = useState(0)", lang: "JS", color: "#f7df1e", tip: "React Hook — declares a state variable with initial value 0" },
-  // Python
-  { code: "def greet(name): return f'Hi {name}'", lang: "PY", color: "#3776ab", tip: "f-string — defines a function using formatted string interpolation" },
-  { code: "nums = [x**2 for x in range(10)]", lang: "PY", color: "#3776ab", tip: "List comprehension — generates squares of 0–9 in one line" },
-  { code: "with open('file.txt') as f:", lang: "PY", color: "#3776ab", tip: "Context manager — opens a file and auto-closes it when done" },
-  { code: "print('Hello, World!')", lang: "PY", color: "#3776ab", tip: "Built-in print — outputs text to the console" },
-  // TypeScript
-  { code: "interface User { name: string; }", lang: "TS", color: "#3178c6", tip: "Interface — defines a type contract for a User object" },
-  { code: "type Props = { onClick: () => void }", lang: "TS", color: "#3178c6", tip: "Type alias — describes a component's prop with a click handler" },
-  { code: "const fn = <T>(arg: T): T => arg", lang: "TS", color: "#3178c6", tip: "Generic function — works with any type, returns same type as input" },
-  // Java
-  { code: 'System.out.println("Hello!");', lang: "JAVA", color: "#ed8b00", tip: "Standard output — prints a line to the console in Java" },
-  { code: "List<String> list = new ArrayList<>();", lang: "JAVA", color: "#ed8b00", tip: "Generics — creates a type-safe dynamic list of strings" },
-  { code: "public static void main(String[] args)", lang: "JAVA", color: "#ed8b00", tip: "Entry point — every Java program starts execution here" },
-  // C
-  { code: 'printf("Hello, World!\\n");', lang: "C", color: "#a8b9cc", tip: "printf — formatted output function from stdio.h" },
-  { code: "int arr[5] = {1, 2, 3, 4, 5};", lang: "C", color: "#a8b9cc", tip: "Array declaration — fixed-size integer array with 5 elements" },
-  { code: "malloc(sizeof(struct Node));", lang: "C", color: "#a8b9cc", tip: "Dynamic memory — allocates heap memory for a struct Node" },
-  // C++
-  { code: 'std::cout << "Hello" << std::endl;', lang: "C++", color: "#00599c", tip: "Stream output — prints to console using the C++ output stream" },
-  { code: "vector<int> v = {1, 2, 3, 4, 5};", lang: "C++", color: "#00599c", tip: "STL vector — dynamic array that grows automatically" },
-  { code: "auto lambda = [](int x) { return x*x; };", lang: "C++", color: "#00599c", tip: "Lambda — anonymous inline function that squares its input" },
-];
+// Interactive Cyber Particle Network Canvas Component
+function CyberMatrixCanvas() {
+  const canvasRef = useRef(null);
 
-function FloatingSnippet({ snippet, style }) {
-  const [hovered, setHovered] = useState(false);
-  const [clicked, setClicked] = useState(false);
-
-  const handleClick = () => {
-    setClicked((prev) => !prev);
-  };
-
-  // Auto-close tooltip after 4 seconds
   useEffect(() => {
-    if (!clicked) return;
-    const t = setTimeout(() => setClicked(false), 4000);
-    return () => clearTimeout(t);
-  }, [clicked]);
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    let animationFrameId;
+
+    let width = (canvas.width = window.innerWidth);
+    let height = (canvas.height = window.innerHeight);
+
+    const handleResize = () => {
+      if (!canvas) return;
+      width = canvas.width = window.innerWidth;
+      height = canvas.height = window.innerHeight;
+    };
+    window.addEventListener("resize", handleResize);
+
+    // Particle nodes
+    const particleCount = Math.min(50, Math.floor((width * height) / 25000));
+    const particles = [];
+    for (let i = 0; i < particleCount; i++) {
+      particles.push({
+        x: Math.random() * width,
+        y: Math.random() * height,
+        vx: (Math.random() - 0.5) * 0.7,
+        vy: (Math.random() - 0.5) * 0.7,
+        size: Math.random() * 2 + 1,
+        color: i % 3 === 0 ? "rgba(56, 189, 248, " : i % 3 === 1 ? "rgba(168, 85, 247, " : "rgba(16, 185, 129, ",
+      });
+    }
+
+    const render = () => {
+      ctx.clearRect(0, 0, width, height);
+
+      // Draw and connect particles
+      for (let i = 0; i < particles.length; i++) {
+        const p = particles[i];
+        p.x += p.vx;
+        p.y += p.vy;
+
+        if (p.x < 0 || p.x > width) p.vx *= -1;
+        if (p.y < 0 || p.y > height) p.vy *= -1;
+
+        // Draw particle dot
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+        ctx.fillStyle = p.color + "0.7)";
+        ctx.fill();
+
+        // Connect nearby particles
+        for (let j = i + 1; j < particles.length; j++) {
+          const p2 = particles[j];
+          const dist = Math.hypot(p.x - p2.x, p.y - p2.y);
+          if (dist < 140) {
+            ctx.beginPath();
+            ctx.moveTo(p.x, p.y);
+            ctx.lineTo(p2.x, p2.y);
+            ctx.strokeStyle = `rgba(56, 189, 248, ${0.15 * (1 - dist / 140)})`;
+            ctx.lineWidth = 0.8;
+            ctx.stroke();
+          }
+        }
+      }
+
+      animationFrameId = requestAnimationFrame(render);
+    };
+
+    render();
+
+    return () => {
+      window.removeEventListener("resize", handleResize);
+      cancelAnimationFrame(animationFrameId);
+    };
+  }, []);
+
+  return <canvas ref={canvasRef} className="absolute inset-0 pointer-events-none opacity-60" />;
+}
+
+// Live Typing Animated Coder Terminal Mockup
+function AnimatedTerminalMockup() {
+  const [lines, setLines] = useState([]);
+  const [activeStep, setActiveStep] = useState(0);
+
+  const TERMINAL_STEPS = [
+    { text: "$ collabcode daemon --init", color: "text-slate-400" },
+    { text: "[ok] Synchronous WebSocket bus established (0ms)", color: "text-emerald-400" },
+    { text: "[ok] Monaco multi-cursor presence engine mounted", color: "text-sky-400" },
+    { text: "[ok] Compilers online: GCC 9.2, Python 3.13, Node 22", color: "text-purple-400" },
+    { text: "✓ Workspace ready. Waiting for collaborators...", color: "text-emerald-300 font-bold" },
+  ];
+
+  useEffect(() => {
+    if (activeStep < TERMINAL_STEPS.length) {
+      const timeout = setTimeout(() => {
+        setLines((prev) => [...prev, TERMINAL_STEPS[activeStep]]);
+        setActiveStep((s) => s + 1);
+      }, 700);
+      return () => clearTimeout(timeout);
+    }
+  }, [activeStep]);
 
   return (
-    <div
-      className="absolute select-none cursor-pointer"
-      style={{
-        ...style,
-        animation: `floatUp ${style.duration}s linear infinite`,
-        animationDelay: `${style.delay}s`,
-        zIndex: hovered || clicked ? 20 : 1,
-      }}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      onClick={handleClick}
-    >
-      {/* Tooltip */}
-      {clicked && (
-        <div
-          className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 w-56 px-3 py-2 rounded-lg text-[11px] leading-relaxed font-sans z-30 pointer-events-none"
-          style={{
-            background: "rgba(13,13,24,0.95)",
-            border: `1px solid ${snippet.color}40`,
-            color: "rgba(255,255,255,0.75)",
-            boxShadow: `0 0 20px ${snippet.color}20`,
-            backdropFilter: "blur(12px)",
-            animation: "tooltipIn 0.15s ease",
-          }}
-        >
-          {/* Arrow */}
-          <div
-            className="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0"
-            style={{
-              borderLeft: "5px solid transparent",
-              borderRight: "5px solid transparent",
-              borderTop: `5px solid ${snippet.color}40`,
-            }}
-          />
-          <span style={{ color: snippet.color }} className="font-mono font-bold text-[10px]">
-            {snippet.lang}
-          </span>
-          <span className="text-white/30 mx-1">·</span>
-          {snippet.tip}
+    <div className="w-full rounded-2xl bg-[#090b14]/90 border border-white/10 shadow-2xl backdrop-blur-xl overflow-hidden font-mono text-xs">
+      {/* Terminal Titlebar */}
+      <div className="flex items-center justify-between px-3 py-2 bg-[#121524] border-b border-white/10 select-none">
+        <div className="flex items-center gap-1.5">
+          <div className="w-3 h-3 rounded-full bg-rose-500/80" />
+          <div className="w-3 h-3 rounded-full bg-amber-500/80" />
+          <div className="w-3 h-3 rounded-full bg-emerald-500/80" />
         </div>
-      )}
+        <span className="text-[10px] text-slate-400 font-medium tracking-wide">
+          collabcode-daemon — 80x24
+        </span>
+        <div className="w-12 text-right">
+          <span className="w-2 h-2 rounded-full bg-emerald-400 inline-block animate-ping" />
+        </div>
+      </div>
 
-      {/* Snippet pill */}
-      <div
-        className="flex items-center gap-2 px-3 py-1.5 rounded-lg border whitespace-nowrap"
-        style={{
-          background: hovered || clicked ? `${snippet.color}25` : `${snippet.color}08`,
-          borderColor: hovered || clicked ? `${snippet.color}60` : `${snippet.color}18`,
-          boxShadow: hovered || clicked ? `0 0 16px ${snippet.color}30, 0 0 4px ${snippet.color}20` : "none",
-          transform: hovered ? "scale(1.06)" : "scale(1)",
-          transition: "all 0.2s ease",
-        }}
-      >
-        <span
-          className="text-[9px] font-bold px-1.5 py-0.5 rounded font-mono"
-          style={{
-            background: hovered || clicked ? `${snippet.color}40` : `${snippet.color}20`,
-            color: snippet.color,
-            transition: "background 0.2s ease",
-          }}
-        >
-          {snippet.lang}
-        </span>
-        <span
-          className="text-[11px] font-mono"
-          style={{
-            color: hovered || clicked ? snippet.color : `${snippet.color}70`,
-            transition: "color 0.2s ease",
-          }}
-        >
-          {snippet.code}
-        </span>
-        {/* Click hint on hover */}
-        {hovered && !clicked && (
-          <span className="text-[9px] ml-1" style={{ color: `${snippet.color}50` }}>click</span>
+      {/* Terminal Stream */}
+      <div className="p-4 space-y-2 min-h-[160px] leading-relaxed">
+        {lines.map((line, idx) => (
+          <div key={idx} className={`${line.color} flex items-start gap-1.5`}>
+            <span className="text-slate-600 select-none">›</span>
+            <span>{line.text}</span>
+          </div>
+        ))}
+        {activeStep >= TERMINAL_STEPS.length && (
+          <div className="flex items-center gap-2 text-sky-400 pt-1">
+            <span className="text-slate-600 select-none">›</span>
+            <span>session active</span>
+            <span className="w-2 h-4 bg-sky-400 animate-pulse" />
+          </div>
         )}
       </div>
     </div>
   );
 }
 
-
-export default function JoinRoom({ onJoin }) {
-  const [roomId, setRoomId]           = useState("");
-  const [username, setUsername]       = useState("");
+export default function JoinRoom({ onJoin, initialRoomId = "" }) {
+  const [roomId, setRoomId] = useState(initialRoomId);
+  const [username, setUsername] = useState("");
+  const [selectedColor, setSelectedColor] = useState("#38bdf8");
   const [usernameError, setUsernameError] = useState("");
-  const [roomError, setRoomError]     = useState("");
-  const [mounted, setMounted]         = useState(false);
-  const [highlighted, setHighlighted] = useState(null);
+  const [roomError, setRoomError] = useState("");
+  const [activeTab, setActiveTab] = useState("create"); // "create" | "join"
+  const [mounted, setMounted] = useState(false);
 
-  // Compute once at module level — no state needed
-const SNIPPETS_DATA = Array.from({ length: 28 }, (_, i) => {
-  const snippet = CODE_SNIPPETS[i % CODE_SNIPPETS.length];
-  return {
-    id: i,
-    snippet,
-    style: {
-      left:     `${(i * 13.7 + (i * 7.3) % 15) % 95}%`,
-      bottom:   `-${60 + (i * 11) % 40}px`,
-      duration: 18 + (i * 1.3) % 20,
-      delay:    -((i * 3.7) % 30),
-      opacity:  0.4 + (i * 0.025) % 0.35,
-    },
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const USER_COLORS = ["#38bdf8", "#10b981", "#a855f7", "#f43f5e", "#f59e0b", "#06b6d4"];
+
+  const generateRoomSlug = () => {
+    const prefixes = ["quantum", "cyber", "hyper", "matrix", "vector", "turbo", "orbit"];
+    const nouns = ["core", "nexus", "pulse", "stream", "forge", "byte", "compiler"];
+    const num = Math.floor(10 + Math.random() * 90);
+    const slug = `${prefixes[Math.floor(Math.random() * prefixes.length)]}-${nouns[Math.floor(Math.random() * nouns.length)]}-${num}`;
+    setRoomId(slug);
+    setRoomError("");
   };
-});
-
-// Inside component — only mounted state needed
-
-
-useEffect(() => {
-  setTimeout(() => setMounted(true), 50);
-}, []);
-
-  
 
   const validate = () => {
     let valid = true;
     setUsernameError("");
     setRoomError("");
+
     if (!username.trim()) {
-      setUsernameError("Username is required.");
+      setUsernameError("Enter your coder alias or name.");
       valid = false;
-    } else if (username.trim().replace(/[^a-zA-Z]/g, "").length < 6) {
-      setUsernameError("Username must have at least 6 letters.");
+    } else if (username.trim().length < 2) {
+      setUsernameError("Name must be at least 2 characters.");
       valid = false;
     }
     return valid;
   };
 
-  const createRoom = () => {
+  const handleLaunch = () => {
     if (!validate()) return;
-    onJoin(uuidv4(), username.trim());
-  };
+    const finalRoom = (activeTab === "create" && !roomId.trim())
+      ? `room-${uuidv4().slice(0, 6)}`
+      : roomId.trim();
 
-  const joinRoom = () => {
-    if (!validate()) return;
-    if (!roomId.trim()) { setRoomError("Please enter a Room ID to join."); return; }
-    onJoin(roomId.trim(), username.trim());
+    if (activeTab === "join" && !roomId.trim()) {
+      setRoomError("Please enter a Room ID to join.");
+      return;
+    }
+
+    onJoin(finalRoom, username.trim());
   };
 
   return (
-    <div className="relative flex items-center justify-center min-h-screen bg-[#07070f] text-white overflow-hidden">
+    <div className="relative flex items-center justify-center min-h-screen bg-[#07080f] text-slate-100 overflow-hidden font-sans p-4">
+      {/* 1. Animated Canvas Matrix */}
+      <CyberMatrixCanvas />
 
-      {/* CSS for float animation */}
-      <style>{`
-        @keyframes floatUp {
-          0%   { transform: translateY(0px) translateX(0px);   opacity: 0; }
-          5%   { opacity: 1; }
-          90%  { opacity: 0.6; }
-          100% { transform: translateY(-110vh) translateX(20px); opacity: 0; }
-        }
-        @keyframes pulse-slow {
-          0%, 100% { opacity: 0.03; }
-          50%       { opacity: 0.07; }
-        }
-        @keyframes floatUp {
-    0%   { transform: translateY(0px) translateX(0px);   opacity: 0; }
-    5%   { opacity: 1; }
-    90%  { opacity: 0.6; }
-    100% { transform: translateY(-110vh) translateX(20px); opacity: 0; }
-  }
-  @keyframes floatUp {
-    0%   { transform: translateY(0px) translateX(0px); opacity: 0; }
-    5%   { opacity: 1; }
-    90%  { opacity: 0.6; }
-    100% { transform: translateY(-110vh) translateX(20px); opacity: 0; }
-  }
-  @keyframes tooltipIn {
-    from { opacity: 0; transform: translateX(-50%) translateY(4px); }
-    to   { opacity: 1; transform: translateX(-50%) translateY(0); }
-  }
-      `}</style>
-
-      {/* Grid background */}
-      <div className="absolute inset-0"
+      {/* 2. Cyber Grid Layer */}
+      <div
+        className="absolute inset-0 pointer-events-none opacity-40"
         style={{
-          backgroundImage: "linear-gradient(rgba(97,218,251,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(97,218,251,0.04) 1px, transparent 1px)",
-          backgroundSize: "44px 44px",
+          backgroundImage:
+            "linear-gradient(rgba(56, 189, 248, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(56, 189, 248, 0.05) 1px, transparent 1px)",
+          backgroundSize: "40px 40px",
         }}
       />
 
-      {/* Ambient glow blobs */}
-      <div className="absolute top-1/3 left-1/4 w-[500px] h-[500px] rounded-full pointer-events-none"
-        style={{ background: "radial-gradient(circle, rgba(97,218,251,0.04) 0%, transparent 70%)" }} />
-      <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] rounded-full"
-        style={{ background: "radial-gradient(circle, rgba(124,77,255,0.04) 0%, transparent 70%)" }} />
+      {/* 3. Ambient Glow Circles */}
+      <div
+        className="absolute top-1/4 left-1/4 w-[600px] h-[600px] rounded-full pointer-events-none"
+        style={{
+          background: "radial-gradient(circle, rgba(56, 189, 248, 0.08) 0%, transparent 65%)",
+        }}
+      />
+      <div
+        className="absolute bottom-1/4 right-1/4 w-[600px] h-[600px] rounded-full pointer-events-none"
+        style={{
+          background: "radial-gradient(circle, rgba(168, 85, 247, 0.08) 0%, transparent 65%)",
+        }}
+      />
 
-      {/* Floating code snippets — full screen */}
-      {SNIPPETS_DATA.map((s) => (
-  <FloatingSnippet
-    key={s.id}
-    id={s.id}
-    snippet={s.snippet}
-    style={s.style}
-    highlighted={highlighted}
-    onHighlight={setHighlighted}
-  />
-))}
-
-      {/* ── Center Card ── */}
-      <div className={`relative z-10 w-full max-w-md transition-all duration-700 px-4 ${mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"}`}>
-
-        {/* Logo */}
-        <div className="flex flex-col items-center mb-8">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="w-11 h-11 rounded-xl flex items-center justify-center font-black text-sm text-white"
-              style={{ background: "linear-gradient(135deg, #61dafb, #7c4dff)" }}>
-              CC
-            </div>
-            <h1 className="text-4xl font-black tracking-tight" style={{
-              background: "linear-gradient(90deg, #61dafb, #a78bfa, #61dafb)",
-              WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
-            }}>
-              CollabCode
-            </h1>
+      {/* 4. Main Two-Column Container */}
+      <div
+        className={`relative z-10 w-full max-w-5xl transition-all duration-700 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center ${
+          mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
+        }`}
+      >
+        {/* Left Column: Brand Hero + Animated Terminal */}
+        <div className="lg:col-span-6 space-y-6">
+          {/* Header Badge */}
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/[0.04] border border-white/10 text-xs text-sky-400 font-mono">
+            <span className="w-2 h-2 rounded-full bg-sky-400 animate-ping" />
+            <span>CollabCode 2.0 • Real-Time Cloud IDE</span>
           </div>
-          <p className="text-[10px] text-white/20 uppercase tracking-[3px]">Real-time collaborative IDE</p>
+
+          {/* Heading */}
+          <div>
+            <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight leading-tight">
+              Code Together.{" "}
+              <span className="bg-gradient-to-r from-sky-400 via-indigo-300 to-teal-300 bg-clip-text text-transparent">
+                In Real-Time.
+              </span>
+            </h1>
+            <p className="text-slate-400 text-sm sm:text-base mt-3 leading-relaxed">
+              Synchronous multi-file pair-programming with live Monaco cursors, Judge0 CE cloud compilers, in-room chat, and interactive shell terminals.
+            </p>
+          </div>
+
+          {/* Live Terminal Simulation */}
+          <AnimatedTerminalMockup />
+
+          {/* Feature Badges */}
+          <div className="grid grid-cols-3 gap-3 pt-2">
+            <div className="p-3 rounded-xl bg-white/[0.02] border border-white/5 flex items-center gap-2 text-xs text-slate-300">
+              <Zap className="w-4 h-4 text-amber-400 shrink-0" />
+              <span>Instant Sync</span>
+            </div>
+            <div className="p-3 rounded-xl bg-white/[0.02] border border-white/5 flex items-center gap-2 text-xs text-slate-300">
+              <Users className="w-4 h-4 text-sky-400 shrink-0" />
+              <span>Live Cursors</span>
+            </div>
+            <div className="p-3 rounded-xl bg-white/[0.02] border border-white/5 flex items-center gap-2 text-xs text-slate-300">
+              <Cpu className="w-4 h-4 text-emerald-400 shrink-0" />
+              <span>Multi-Lang</span>
+            </div>
+          </div>
         </div>
 
-        {/* Form card */}
-        <div className="rounded-2xl p-8"
-  style={{
-    background: "rgba(13,13,24,0.85)",
-    border: "1px solid rgba(97,218,251,0.12)",
-    boxShadow: "0 0 40px rgba(97,218,251,0.06), inset 0 0 40px rgba(97,218,251,0.02)",
-    backdropFilter: "blur(20px)",
-  }}>
-
-          {/* Username */}
-          <div className="mb-4">
-            <label className="text-[10px] text-white/25 uppercase tracking-[1.5px] block mb-1.5">Username</label>
-            <input
-              className={`w-full px-4 py-2.5 rounded-lg bg-[#13131e] text-white text-sm outline-none font-mono transition-all placeholder-white/15 ${
-                usernameError
-                  ? "border border-red-500/50"
-                  : "border border-white/8 focus:border-[#61dafb]/40"
-              }`}
-              placeholder="Enter Username..."
-              value={username}
-              onChange={(e) => { setUsername(e.target.value); setUsernameError(""); }}
-              onKeyDown={(e) => e.key === "Enter" && createRoom()}
-            />
-            {usernameError && (
-              <p className="text-[11px] text-red-400 mt-1.5 flex items-center gap-1.5">
-                 {usernameError}
-              </p>
-            )}
-          </div>
-
-          {/* Room ID */}
-          <div className="mb-6">
-            <label className="text-[10px] text-white/25 uppercase tracking-[1.5px] block mb-1.5">
-              Room ID <span className="normal-case tracking-normal text-white/15 text-[9px]">(leave empty to create new)</span>
-            </label>
-            <input
-              className={`w-full px-4 py-2.5 rounded-lg bg-[#13131e] text-white text-sm outline-none font-mono transition-all placeholder-white/15 ${
-                roomError
-                  ? "border border-red-500/50"
-                  : "border border-white/8 focus:border-[#61dafb]/40"
-              }`}
-              placeholder="Paste room ID here..."
-              value={roomId}
-              onChange={(e) => { setRoomId(e.target.value); setRoomError(""); }}
-              onKeyDown={(e) => e.key === "Enter" && joinRoom()}
-            />
-            {roomError && (
-              <p className="text-[11px] text-red-400 mt-1.5 flex items-center gap-1.5">
-                 {roomError}
-              </p>
-            )}
-          </div>
-
-          {/* Buttons */}
-          <button
-            onClick={createRoom}
-            className="w-full py-2.5 rounded-lg font-bold text-sm text-black mb-3 transition-all active:scale-[0.98] hover:opacity-90"
-            style={{ background: "linear-gradient(90deg, #61dafb, #4fc8e8)" }}
+        {/* Right Column: Coder Login & Workspace Card */}
+        <div className="lg:col-span-6">
+          <div
+            className="rounded-3xl p-6 sm:p-8 backdrop-blur-2xl border transition-all"
+            style={{
+              background: "rgba(13, 16, 28, 0.88)",
+              borderColor: "rgba(255, 255, 255, 0.1)",
+              boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.1)",
+            }}
           >
-            ✦ Create New Room
-          </button>
+            {/* Card Header with Tabs */}
+            <div className="flex items-center justify-between border-b border-white/8 pb-4 mb-6">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-sky-400 to-indigo-500 flex items-center justify-center font-black text-slate-950 shadow-md shadow-sky-500/20">
+                  CC
+                </div>
+                <div>
+                  <h2 className="text-base font-bold text-white">Join Workspace</h2>
+                  <p className="text-[11px] text-slate-400">Collaborative Coding Session</p>
+                </div>
+              </div>
 
-          <div className="flex items-center gap-3 mb-3">
-            <div className="flex-1 h-px bg-white/5"></div>
-            <span className="text-[10px] text-white/15">or</span>
-            <div className="flex-1 h-px bg-white/5"></div>
-          </div>
+              {/* Mode Switcher */}
+              <div className="flex bg-white/5 p-1 rounded-xl border border-white/10 text-xs">
+                <button
+                  type="button"
+                  onClick={() => setActiveTab("create")}
+                  className={`px-3 py-1 rounded-lg font-medium transition-all ${
+                    activeTab === "create"
+                      ? "bg-sky-500 text-slate-950 font-bold shadow-sm"
+                      : "text-slate-400 hover:text-white"
+                  }`}
+                >
+                  Create
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveTab("join")}
+                  className={`px-3 py-1 rounded-lg font-medium transition-all ${
+                    activeTab === "join"
+                      ? "bg-sky-500 text-slate-950 font-bold shadow-sm"
+                      : "text-slate-400 hover:text-white"
+                  }`}
+                >
+                  Join
+                </button>
+              </div>
+            </div>
 
-          <button
-            onClick={joinRoom}
-            className="w-full py-2.5 rounded-lg font-bold text-sm text-[#61dafb] transition-all active:scale-[0.98] hover:bg-[#61dafb]/10"
-            style={{ border: "1px solid rgba(97,218,251,0.2)", background: "rgba(97,218,251,0.04)" }}
-          >
-            → Join Existing Room
-          </button>
+            {/* Coder Alias Input */}
+            <div className="mb-4">
+              <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-1.5">
+                Developer Alias
+              </label>
+              <div className="relative flex items-center">
+                <span className="absolute left-3.5 text-slate-500 font-mono text-sm select-none">
+                  &gt;_
+                </span>
+                <input
+                  type="text"
+                  autoFocus
+                  value={username}
+                  onChange={(e) => {
+                    setUsername(e.target.value);
+                    setUsernameError("");
+                  }}
+                  placeholder="e.g. Neo, Alan, Ada..."
+                  className={`w-full pl-10 pr-4 py-2.5 rounded-xl bg-[#090b14] text-white text-sm font-mono outline-none transition-all placeholder-slate-600 border ${
+                    usernameError
+                      ? "border-rose-500/60 focus:ring-1 focus:ring-rose-500"
+                      : "border-white/10 focus:border-sky-400/60 focus:ring-1 focus:ring-sky-400/20"
+                  }`}
+                  onKeyDown={(e) => e.key === "Enter" && handleLaunch()}
+                />
+              </div>
+              {usernameError && (
+                <p className="text-[11px] text-rose-400 mt-1">{usernameError}</p>
+              )}
+            </div>
 
-          {/* Tech badges */}
-          <div className="flex flex-wrap justify-center gap-1.5 mt-6 pt-5 border-t border-white/5">
-            {[
-              { name: "JavaScript", color: "#f7df1e" },
-              { name: "Python",     color: "#3776ab" },
-              { name: "TypeScript", color: "#3178c6" },
-              { name: "Java",       color: "#ed8b00" },
-              { name: "C",          color: "#a8b9cc" },
-              { name: "C++",        color: "#00599c" },
-            ].map((t) => (
-              <span key={t.name}
-                className="text-[9px] px-2 py-0.5 rounded font-mono"
-                style={{ background: `${t.color}12`, color: `${t.color}80`, border: `0.5px solid ${t.color}25` }}
-              >
-                {t.name}
+            {/* Room ID Input */}
+            <div className="mb-6">
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                  {activeTab === "create" ? "Workspace Name (Optional)" : "Target Room ID"}
+                </label>
+                {activeTab === "create" && (
+                  <button
+                    type="button"
+                    onClick={generateRoomSlug}
+                    className="text-[11px] text-sky-400 hover:text-sky-300 font-semibold flex items-center gap-1 transition-colors"
+                  >
+                    <Dice5 className="w-3.5 h-3.5" />
+                    Shuffle Name
+                  </button>
+                )}
+              </div>
+              <input
+                type="text"
+                value={roomId}
+                onChange={(e) => {
+                  setRoomId(e.target.value);
+                  setRoomError("");
+                }}
+                placeholder={
+                  activeTab === "create"
+                    ? "Leave blank to auto-generate..."
+                    : "Paste Room ID here..."
+                }
+                className={`w-full px-4 py-2.5 rounded-xl bg-[#090b14] text-white font-mono text-sm outline-none transition-all placeholder-slate-600 border ${
+                  roomError
+                    ? "border-rose-500/60 focus:ring-1 focus:ring-rose-500"
+                    : "border-white/10 focus:border-sky-400/60 focus:ring-1 focus:ring-sky-400/20"
+                }`}
+                onKeyDown={(e) => e.key === "Enter" && handleLaunch()}
+              />
+              {roomError && (
+                <p className="text-[11px] text-rose-400 mt-1">{roomError}</p>
+              )}
+            </div>
+
+            {/* Launch Primary Button */}
+            <button
+              onClick={handleLaunch}
+              className="w-full py-3 rounded-xl font-bold text-sm text-slate-950 bg-gradient-to-r from-sky-400 via-teal-300 to-indigo-400 hover:from-sky-300 hover:to-indigo-300 shadow-lg shadow-sky-500/20 active:scale-[0.99] transition-all cursor-pointer flex items-center justify-center gap-2"
+            >
+              <Sparkles className="w-4 h-4 fill-current" />
+              <span>
+                {activeTab === "create" ? "Launch Synchronous Workspace" : "Connect to Session"}
               </span>
-            ))}
+              <ArrowRight className="w-4 h-4" />
+            </button>
+
+            {/* Fast Starter Language Templates */}
+            <div className="mt-6 pt-5 border-t border-white/8">
+              <span className="text-[10px] uppercase tracking-wider text-slate-500 font-bold block mb-2 text-center">
+                Supported Compilers & Runtimes
+              </span>
+              <div className="flex flex-wrap justify-center gap-1.5">
+                {[
+                  { name: "C++ (GCC 9.2)", color: "#00599c" },
+                  { name: "Python 3.13", color: "#3776ab" },
+                  { name: "JavaScript", color: "#f7df1e" },
+                  { name: "Java 17", color: "#ed8b00" },
+                  { name: "TypeScript", color: "#3178c6" },
+                  { name: "C (GCC)", color: "#a8b9cc" },
+                ].map((tech) => (
+                  <span
+                    key={tech.name}
+                    className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-white/[0.03] border border-white/10 text-slate-300 flex items-center gap-1"
+                  >
+                    <span
+                      className="w-1.5 h-1.5 rounded-full"
+                      style={{ backgroundColor: tech.color }}
+                    />
+                    {tech.name}
+                  </span>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
       </div>
