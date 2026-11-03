@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { prewarmBackend } from "../utils/backendUrl";
+import { useAlert } from "../context/AlertContext";
 import {
   Code2,
   Terminal,
@@ -160,6 +161,7 @@ function AnimatedTerminalMockup() {
 }
 
 export default function JoinRoom({ onJoin, initialRoomId = "" }) {
+  const { toast } = useAlert();
   const [roomId, setRoomId] = useState(initialRoomId);
   const [username, setUsername] = useState("");
   const [selectedColor, setSelectedColor] = useState("#38bdf8");
@@ -186,6 +188,7 @@ export default function JoinRoom({ onJoin, initialRoomId = "" }) {
     const slug = `${prefixes[Math.floor(Math.random() * prefixes.length)]}-${nouns[Math.floor(Math.random() * nouns.length)]}-${num}`;
     setRoomId(slug);
     setRoomError("");
+    toast.info(`Generated workspace alias: ${slug}`, { title: "Room Shuffled" });
   };
 
   const validate = () => {
@@ -194,10 +197,14 @@ export default function JoinRoom({ onJoin, initialRoomId = "" }) {
     setRoomError("");
 
     if (!username.trim()) {
-      setUsernameError("Enter your coder alias or name.");
+      const err = "Enter your coder alias or name.";
+      setUsernameError(err);
+      toast.warning(err, { title: "Alias Required" });
       valid = false;
     } else if (username.trim().length < 2) {
-      setUsernameError("Name must be at least 2 characters.");
+      const err = "Alias must be at least 2 characters.";
+      setUsernameError(err);
+      toast.warning(err, { title: "Alias Too Short" });
       valid = false;
     }
     return valid;
@@ -210,7 +217,9 @@ export default function JoinRoom({ onJoin, initialRoomId = "" }) {
       : roomId.trim();
 
     if (activeTab === "join" && !roomId.trim()) {
-      setRoomError("Please enter a Room ID to join.");
+      const err = "Please enter or paste a Target Room ID to connect.";
+      setRoomError(err);
+      toast.warning(err, { title: "Room ID Required" });
       return;
     }
 
@@ -412,6 +421,7 @@ export default function JoinRoom({ onJoin, initialRoomId = "" }) {
                           }
                           setRoomId(id);
                           setRoomError("");
+                          toast.success(`Pasted Room ID "${id}".`, { title: "Clipboard Pasted" });
                         }
                       } catch (e) {}
                     }}

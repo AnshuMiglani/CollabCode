@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { io } from "socket.io-client";
 import { getBackendUrl } from "../utils/backendUrl";
+import { triggerGlobalAlert } from "../context/AlertContext";
 
 // Persistent socket instance across renders
 let socketInstance = null;
@@ -127,8 +128,14 @@ export default function useSocket({
       if (onKicked) {
         onKicked();
       } else {
-        alert("You have been removed from this room by the host.");
-        window.location.href = "/";
+        triggerGlobalAlert({
+          title: "Session Terminated",
+          message: "You have been removed from this collaborative workspace by the host.",
+          type: "danger",
+          confirmText: "Return to Lobby",
+        }).then(() => {
+          window.location.href = "/";
+        });
       }
     });
 

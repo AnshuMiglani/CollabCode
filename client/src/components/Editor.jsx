@@ -18,9 +18,12 @@ import {
 } from "../utils/languageUtils";
 import { copyToClipboard } from "../utils/clipboard";
 import { getBackendUrl } from "../utils/backendUrl";
+import { useAlert } from "../context/AlertContext";
 import { Terminal, MessageSquare, TerminalSquare, Eye, X, Maximize2, Minimize2 } from "lucide-react";
 
 export default function Editor({ roomId, username, onLeaveRoom }) {
+  const { toast, showAlert, showConfirm } = useAlert();
+
   // Panel Layout Dimensions
   const [sidebarWidth, setSidebarWidth] = useState(240);
   const [bottomPanelHeight, setBottomPanelHeight] = useState(200);
@@ -188,8 +191,14 @@ export default function Editor({ roomId, username, onLeaveRoom }) {
       setParticipants(list);
     },
     onKicked: () => {
-      alert("You have been removed from the session by the host.");
-      if (onLeaveRoom) onLeaveRoom();
+      showAlert({
+        title: "Session Terminated",
+        message: "You have been removed from the collaborative workspace by the host.",
+        type: "danger",
+        confirmText: "Return to Lobby",
+      }).then(() => {
+        if (onLeaveRoom) onLeaveRoom();
+      });
     },
   });
 
@@ -447,6 +456,7 @@ export default function Editor({ roomId, username, onLeaveRoom }) {
     const ok = await copyToClipboard(shareUrl);
     if (ok) {
       setCopiedLink(true);
+      toast.success("Sharable room invite link copied to clipboard!", { title: "Invite Link Copied" });
       setTimeout(() => setCopiedLink(false), 2200);
     }
   };
@@ -455,6 +465,7 @@ export default function Editor({ roomId, username, onLeaveRoom }) {
     const ok = await copyToClipboard(roomId);
     if (ok) {
       setCopiedRoomId(true);
+      toast.success(`Room ID "${roomId}" copied to clipboard!`, { title: "Room ID Copied" });
       setTimeout(() => setCopiedRoomId(false), 2200);
     }
   };

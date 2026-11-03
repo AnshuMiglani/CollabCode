@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { getLangByExt } from "../utils/languageUtils";
 import { getBackendUrl } from "../utils/backendUrl";
+import { useAlert } from "../context/AlertContext";
 
 export default function Sidebar({
   files = [],
@@ -47,6 +48,7 @@ export default function Sidebar({
   isConnected,
   connectionStatus,
 }) {
+  const { toast, showConfirm } = useAlert();
   const [activeTab, setActiveTab] = useState("files"); // "files" | "users" | "settings"
   const [isCreating, setIsCreating] = useState(false);
   const [newFileName, setNewFileName] = useState("");
@@ -61,6 +63,7 @@ export default function Sidebar({
       return;
     }
     onAddFile(trimmed);
+    toast.success(`Created file "${trimmed}".`, { title: "File Created" });
     setNewFileName("");
     setIsCreating(false);
   };
@@ -76,6 +79,7 @@ export default function Sidebar({
     const trimmed = renameValue.trim();
     if (trimmed && trimmed !== editingFileName) {
       onRenameFile(editingFileName, trimmed);
+      toast.info(`Renamed file to "${trimmed}".`, { title: "File Renamed" });
     }
     setEditingFileName(null);
     setRenameValue("");
@@ -91,6 +95,7 @@ export default function Sidebar({
     link.download = activeData.name;
     link.click();
     URL.revokeObjectURL(url);
+    toast.success(`Exported "${activeData.name}" to your downloads.`, { title: "File Exported" });
   };
 
   return (
@@ -269,9 +274,19 @@ export default function Sidebar({
                       </button>
                       {files.length > 1 && (
                         <button
-                          onClick={(e) => {
+                          onClick={async (e) => {
                             e.stopPropagation();
-                            if (confirm(`Delete ${file.name}?`)) onDeleteFile(file.name);
+                            const confirmed = await showConfirm({
+                              title: "Delete File",
+                              message: `Are you sure you want to permanently delete "${file.name}"? This file will be removed for all collaborators in this room.`,
+                              type: "danger",
+                              confirmText: "Delete File",
+                              cancelText: "Cancel",
+                            });
+                            if (confirmed) {
+                              onDeleteFile(file.name);
+                              toast.info(`Deleted "${file.name}".`, { title: "File Removed" });
+                            }
                           }}
                           className="p-1 text-slate-400 hover:text-rose-400 rounded hover:bg-white/10"
                           title="Delete"
@@ -391,7 +406,19 @@ export default function Sidebar({
                     {/* Host kick action */}
                     {currentUser === creatorName && !isSelf && (
                       <button
-                        onClick={() => onKickUser(user.username)}
+                        onClick={async () => {
+                          const confirmed = await showConfirm({
+                            title: "Remove Collaborator",
+                            message: `Are you sure you want to disconnect "${user.username}" from this collaborative session?`,
+                            type: "danger",
+                            confirmText: "Remove User",
+                            cancelText: "Cancel",
+                          });
+                          if (confirmed) {
+                            onKickUser(user.username);
+                            toast.warning(`Removed "${user.username}" from session.`, { title: "User Removed" });
+                          }
+                        }}
                         className="opacity-0 group-hover:opacity-100 p-1 text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 rounded transition-all"
                         title="Remove user from room"
                       >

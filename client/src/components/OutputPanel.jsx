@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { Play, Copy, Check, Trash2, Clock, AlertCircle, CheckCircle2, Terminal as TerminalIcon, CornerDownLeft } from "lucide-react";
+import { copyToClipboard } from "../utils/clipboard";
+import { useAlert } from "../context/AlertContext";
 
 export default function OutputPanel({
   output = "",
@@ -11,15 +13,22 @@ export default function OutputPanel({
   onStdinChange,
   onClear,
 }) {
+  const { toast } = useAlert();
   const [copied, setCopied] = useState(false);
   const [showStdin, setShowStdin] = useState(true); // default visible for immediate access
 
-  const handleCopy = () => {
+  const handleCopy = async () => {
     const textToCopy = output || error || "";
-    if (!textToCopy) return;
-    navigator.clipboard.writeText(textToCopy);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    if (!textToCopy) {
+      toast.warning("Output is empty. Run your code first!", { title: "No Output" });
+      return;
+    }
+    const ok = await copyToClipboard(textToCopy);
+    if (ok) {
+      setCopied(true);
+      toast.success("Execution output copied to clipboard!", { title: "Copied" });
+      setTimeout(() => setCopied(false), 2000);
+    }
   };
 
   return (

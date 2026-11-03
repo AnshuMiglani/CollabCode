@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import JoinRoom from "./components/JoinRoom";
 import Editor from "./components/Editor";
 import { prewarmBackend } from "./utils/backendUrl";
+import { AlertProvider } from "./context/AlertContext";
 
 export default function App() {
   const [room, setRoom] = useState(null);
@@ -50,9 +51,13 @@ export default function App() {
     window.history.pushState({}, "", window.location.pathname);
   };
 
-  return room ? (
-    <Editor roomId={room} username={username} onLeaveRoom={handleLeave} />
-  ) : (
-    <JoinRoom onJoin={handleJoin} initialRoomId={initialRoomId} />
+  return (
+    <AlertProvider>
+      {room ? (
+        <Editor roomId={room} username={username} onLeaveRoom={handleLeave} />
+      ) : (
+        <JoinRoom onJoin={handleJoin} initialRoomId={initialRoomId} />
+      )}
+    </AlertProvider>
   );
 }
