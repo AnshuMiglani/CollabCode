@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { v4 as uuidv4 } from "uuid";
+import { prewarmBackend } from "../utils/backendUrl";
 import {
   Code2,
   Terminal,
@@ -13,7 +14,8 @@ import {
   CheckCircle2,
   Globe,
   Radio,
-  Flame
+  Flame,
+  ClipboardPaste
 } from "lucide-react";
 
 // Interactive Cyber Particle Network Canvas Component
@@ -163,12 +165,17 @@ export default function JoinRoom({ onJoin, initialRoomId = "" }) {
   const [selectedColor, setSelectedColor] = useState("#38bdf8");
   const [usernameError, setUsernameError] = useState("");
   const [roomError, setRoomError] = useState("");
-  const [activeTab, setActiveTab] = useState("create"); // "create" | "join"
+  const [activeTab, setActiveTab] = useState(initialRoomId ? "join" : "create"); // "create" | "join"
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     setMounted(true);
-  }, []);
+    prewarmBackend(); // Wake up Render backend immediately
+    if (initialRoomId) {
+      setRoomId(initialRoomId);
+      setActiveTab("join");
+    }
+  }, [initialRoomId]);
 
   const USER_COLORS = ["#38bdf8", "#10b981", "#a855f7", "#f43f5e", "#f59e0b", "#06b6d4"];
 
@@ -335,6 +342,16 @@ export default function JoinRoom({ onJoin, initialRoomId = "" }) {
               </div>
             </div>
 
+            {/* Invited to Room Alert */}
+            {initialRoomId && activeTab === "join" && (
+              <div className="mb-4 p-3 rounded-xl bg-sky-500/10 border border-sky-500/20 text-xs text-sky-300 flex items-center gap-2.5">
+                <Sparkles className="w-4 h-4 text-sky-400 shrink-0" />
+                <span>
+                  Invited to workspace: <strong className="font-mono text-white underline">{initialRoomId}</strong>
+                </span>
+              </div>
+            )}
+
             {/* Coder Alias Input */}
             <div className="mb-4">
               <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-1.5">
@@ -372,7 +389,7 @@ export default function JoinRoom({ onJoin, initialRoomId = "" }) {
                 <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
                   {activeTab === "create" ? "Workspace Name (Optional)" : "Target Room ID"}
                 </label>
-                {activeTab === "create" && (
+                {activeTab === "create" ? (
                   <button
                     type="button"
                     onClick={generateRoomSlug}
@@ -380,6 +397,29 @@ export default function JoinRoom({ onJoin, initialRoomId = "" }) {
                   >
                     <Dice5 className="w-3.5 h-3.5" />
                     Shuffle Name
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      try {
+                        const clip = await navigator.clipboard.readText();
+                        if (clip) {
+                          let id = clip.trim();
+                          if (id.includes("room=")) {
+                            const match = id.match(/[?&]room=([^&]+)/);
+                            if (match) id = decodeURIComponent(match[1]);
+                          }
+                          setRoomId(id);
+                          setRoomError("");
+                        }
+                      } catch (e) {}
+                    }}
+                    className="text-[11px] text-sky-400 hover:text-sky-300 font-semibold flex items-center gap-1 transition-colors"
+                    title="Paste from clipboard"
+                  >
+                    <ClipboardPaste className="w-3.5 h-3.5" />
+                    Paste
                   </button>
                 )}
               </div>

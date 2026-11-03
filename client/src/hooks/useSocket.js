@@ -1,17 +1,20 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { io } from "socket.io-client";
+import { getBackendUrl } from "../utils/backendUrl";
 
 // Persistent socket instance across renders
 let socketInstance = null;
 
-function getSocket() {
+export function getSocket() {
   if (!socketInstance) {
-    const backendUrl = import.meta.env.VITE_BACKEND_URL || window.location.origin;
+    const backendUrl = getBackendUrl();
     socketInstance = io(backendUrl, {
-      transports: ["websocket", "polling"],
-      reconnectionAttempts: 10,
+      transports: ["polling", "websocket"],
+      reconnection: true,
+      reconnectionAttempts: Infinity,
       reconnectionDelay: 1000,
-      timeout: 20000,
+      reconnectionDelayMax: 5000,
+      timeout: 30000,
     });
   }
   return socketInstance;
@@ -33,24 +36,29 @@ export default function useSocket({
   onKicked,
 }) {
   const [isConnected, setIsConnected] = useState(false);
+  const [connectionStatus, setConnectionStatus] = useState("connecting");
   const [selfColor, setSelfColor] = useState("#38bdf8");
   const socketRef = useRef(getSocket());
-
-  // Prevent local bounce-backs
-  const ignoreRemoteNext = useRef(new Map());
 
   useEffect(() => {
     const socket = socketRef.current;
 
     const handleConnect = () => {
       setIsConnected(true);
+      setConnectionStatus("connected");
       if (roomId && username) {
         socket.emit("join-room", roomId, username);
       }
     };
 
-    const handleDisconnect = () => {
+    const handleDisconnect = (reason) => {
       setIsConnected(false);
+      setConnectionStatus(reason === "io client disconnect" ? "disconnected" : "reconnecting");
+    };
+
+    const handleConnectError = () => {
+      setIsConnected(false);
+      setConnectionStatus("reconnecting");
     };
 
     if (socket.connected) {
@@ -61,6 +69,8 @@ export default function useSocket({
 
     socket.on("connect", handleConnect);
     socket.on("disconnect", handleDisconnect);
+    socket.on("connect_error", handleConnectError);
+    socket.io.on("reconnect_attempt", () => setConnectionStatus("reconnecting"));
 
     // Synchronize full room
     socket.on("sync-room-state", (state) => {
@@ -125,6 +135,7 @@ export default function useSocket({
     return () => {
       socket.off("connect", handleConnect);
       socket.off("disconnect", handleDisconnect);
+      socket.off("connect_error", handleConnectError);
       socket.off("sync-room-state");
       socket.off("code-update");
       socket.off("remote-cursor-update");
@@ -183,6 +194,7 @@ export default function useSocket({
   return {
     socket: socketRef.current,
     isConnected,
+    connectionStatus,
     selfColor,
     emitCodeChange,
     emitCursorMove,

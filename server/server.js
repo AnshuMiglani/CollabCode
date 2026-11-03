@@ -36,11 +36,18 @@ const io = new Server(server, {
     origin: "*",
     methods: ["GET", "POST"]
   },
-  transports: ["websocket", "polling"]
+  transports: ["polling", "websocket"]
 });
 
-// Attach Terminal PTY Server
-setupPty(io);
+// Map<roomId, RoomState>
+const rooms = new Map();
+
+// Attach Terminal PTY Server safely
+try {
+  setupPty(io);
+} catch (ptyErr) {
+  console.warn("Terminal PTY setup warning:", ptyErr.message);
+}
 
 // Health check route
 app.get("/", (req, res) => {
@@ -229,8 +236,7 @@ body {
   }
 };
 
-// Map<roomId, RoomState>
-const rooms = new Map();
+// getOrCreateRoom initializes room with default files and creator
 
 function getOrCreateRoom(roomId, creatorUsername) {
   if (!rooms.has(roomId)) {

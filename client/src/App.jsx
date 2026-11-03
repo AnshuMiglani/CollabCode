@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import JoinRoom from "./components/JoinRoom";
 import Editor from "./components/Editor";
+import { prewarmBackend } from "./utils/backendUrl";
 
 export default function App() {
   const [room, setRoom] = useState(null);
@@ -8,6 +9,9 @@ export default function App() {
   const [initialRoomId, setInitialRoomId] = useState("");
 
   useEffect(() => {
+    // Warm up the Render backend as early as possible
+    prewarmBackend();
+
     // Parse URL query parameter for direct room link (e.g. ?room=abc-123)
     const params = new URLSearchParams(window.location.search);
     const urlRoom = params.get("room") || params.get("join");
@@ -18,7 +22,12 @@ export default function App() {
     // Check session storage for auto-reconnect on refresh
     const savedRoom = sessionStorage.getItem("collab_room");
     const savedUser = sessionStorage.getItem("collab_username");
-    if (savedRoom && savedUser) {
+
+    // If an explicit invite link room is in the URL and differs from savedRoom, prioritize invite
+    if (urlRoom && savedRoom && urlRoom !== savedRoom) {
+      sessionStorage.removeItem("collab_room");
+      if (savedUser) setUsername(savedUser);
+    } else if (savedRoom && savedUser) {
       setRoom(savedRoom);
       setUsername(savedUser);
     }

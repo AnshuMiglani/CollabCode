@@ -16,6 +16,8 @@ import {
   getLangByValue,
   renameFileExt,
 } from "../utils/languageUtils";
+import { copyToClipboard } from "../utils/clipboard";
+import { getBackendUrl } from "../utils/backendUrl";
 import { Terminal, MessageSquare, TerminalSquare, Eye, X, Maximize2, Minimize2 } from "lucide-react";
 
 export default function Editor({ roomId, username, onLeaveRoom }) {
@@ -65,7 +67,8 @@ export default function Editor({ roomId, username, onLeaveRoom }) {
   const [previewSrcDoc, setPreviewSrcDoc] = useState("");
 
   // UI state
-  const [copied, setCopied] = useState(false);
+  const [copiedLink, setCopiedLink] = useState(false);
+  const [copiedRoomId, setCopiedRoomId] = useState(false);
 
   // Active File & Language
   const currentFileData = files.find((f) => f.name === activeFile) || files[0] || {
@@ -79,6 +82,7 @@ export default function Editor({ roomId, username, onLeaveRoom }) {
   const {
     socket,
     isConnected,
+    connectionStatus,
     selfColor,
     emitCodeChange,
     emitCursorMove,
@@ -385,7 +389,7 @@ export default function Editor({ roomId, username, onLeaveRoom }) {
       }
     } catch (err) {
       // If cloud fails, try fallback to backend /api/run
-      const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
+      const backendUrl = getBackendUrl();
       try {
         const localRes = await axios.post(`${backendUrl}/api/run`, {
           language: langConfig.value,
@@ -437,12 +441,39 @@ export default function Editor({ roomId, username, onLeaveRoom }) {
     setShowWebPreview(true);
   };
 
-  // ── Share Room Link ──
-  const copyRoomLink = () => {
+  // ── Share Room Link & Room ID ──
+  const copyRoomLink = async () => {
     const shareUrl = `${window.location.origin}/?room=${encodeURIComponent(roomId)}`;
-    navigator.clipboard.writeText(shareUrl);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2200);
+    const ok = await copyToClipboard(shareUrl);
+    if (ok) {
+      setCopiedLink(true);
+      setTimeout(() => setCopiedLink(false), 2200);
+    }
+  };
+
+  const copyRoomIdOnly = async () => {
+    const ok = await copyToClipboard(roomId);
+    if (ok) {
+      setCopiedRoomId(true);
+      setTimeout(() => setCopiedRoomId(false), 2200);
+    }
+  };
+
+  const handleShareNative = async () => {
+    const shareUrl = `${window.location.origin}/?room=${encodeURIComponent(roomId)}`;
+    if (typeof navigator !== "undefined" && navigator.share) {
+      try {
+        await navigator.share({
+          title: "CollabCode Collaborative Session",
+          text: `Join my live coding session on CollabCode (Room: ${roomId})`,
+          url: shareUrl,
+        });
+        return;
+      } catch (err) {
+        // Fallback to copy link if cancelled or unsupported
+      }
+    }
+    copyRoomLink();
   };
 
   // ── Resizers ──
@@ -484,9 +515,13 @@ export default function Editor({ roomId, username, onLeaveRoom }) {
         creatorName={creatorName}
         participants={participants}
         onToggleSidebar={() => setShowSidebar((v) => !v)}
-        copied={copied}
-        onCopy={copyRoomLink}
+        copiedLink={copiedLink}
+        onCopyLink={copyRoomLink}
+        copiedRoomId={copiedRoomId}
+        onCopyRoomId={copyRoomIdOnly}
+        onShareNative={handleShareNative}
         isConnected={isConnected}
+        connectionStatus={connectionStatus}
       />
 
       {/* 2. Main IDE Workspace */}
@@ -512,6 +547,13 @@ export default function Editor({ roomId, username, onLeaveRoom }) {
                 onFontSizeChange={setFontSize}
                 wordWrap={wordWrap}
                 onWordWrapChange={setWordWrap}
+                roomId={roomId}
+                copiedRoomId={copiedRoomId}
+                onCopyRoomId={copyRoomIdOnly}
+                copiedLink={copiedLink}
+                onCopyLink={copyRoomLink}
+                isConnected={isConnected}
+                connectionStatus={connectionStatus}
               />
             </div>
             <ResizableDivider onResize={resizeSidebar} direction="horizontal" />
